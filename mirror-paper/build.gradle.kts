@@ -3,8 +3,6 @@ plugins {
     id("config-publish")
 }
 
-description = "Paper-specific reflection utilities"
-
 repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
 }

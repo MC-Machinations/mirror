@@ -56,7 +56,7 @@ fun MavenPom.standard() {
     val repoUrl = "https://github.com/$repoPath"
 
     name.set(project.name)
-    description.set(project.description)
+    description.set("Reflection utilities")
     url.set(repoUrl)
     inceptionYear.set("2022")
     packaging = "jar"
