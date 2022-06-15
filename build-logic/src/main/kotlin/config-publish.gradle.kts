@@ -52,7 +52,7 @@ fun MavenPublication.standardConfig(versionName: String) {
 }
 
 fun MavenPom.standard() {
-    val repoPath = "Machine-Maker/stuff"
+    val repoPath = "Machine-Maker/mirror"
     val repoUrl = "https://github.com/$repoPath"
 
     name.set(project.name)
