@@ -48,7 +48,7 @@ class MethodInvokerImpl implements MethodInvoker {
             args[0] = target;
         }
         if (arguments.length > 0) {
-            System.arraycopy(arguments, 0, args, instanceIndex, args.length);
+            System.arraycopy(arguments, 0, args, instanceIndex, arguments.length);
         }
         try {
             return this.methodHandle.invokeWithArguments(args);
