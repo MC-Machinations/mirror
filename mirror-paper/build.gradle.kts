@@ -9,5 +9,5 @@ repositories {
 
 dependencies {
     api(project(":mirror-core"))
-    compileOnly("io.papermc.paper:paper-api:1.19-R0.1-SNAPSHOT")
+    compileOnly(libs.paper)
 }
