@@ -32,15 +32,15 @@ tasks {
     }
 
     processResources {
-        charset(StandardCharsets.UTF_8.name())
+        filteringCharset = StandardCharsets.UTF_8.name()
     }
 
     javadoc {
-        charset(StandardCharsets.UTF_8.name())
+        options.encoding = StandardCharsets.UTF_8.name()
     }
 
     compileJava {
-        charset(StandardCharsets.UTF_8.name())
+        options.encoding = StandardCharsets.UTF_8.name()
     }
 
     withType<Jar> {
@@ -48,6 +48,10 @@ tasks {
             into("META-INF")
             include("LICENSE")
         }
+    }
+
+    withType<PublishToMavenRepository> {
+        dependsOn(check)
     }
 }
 
