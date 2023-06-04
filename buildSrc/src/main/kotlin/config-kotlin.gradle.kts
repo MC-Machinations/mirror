@@ -36,7 +36,10 @@ tasks {
     }
 
     javadoc {
-        options.encoding = StandardCharsets.UTF_8.name()
+        options {
+            encoding = StandardCharsets.UTF_8.name()
+            (this as CoreJavadocOptions).addBooleanOption("Xdoclint:none", true)
+        }
     }
 
     compileJava {

@@ -2,7 +2,6 @@ pluginManagement {
     repositories {
         gradlePluginPortal()
     }
-    includeBuild("build-logic")
 }
 
 rootProject.name = "mirror-parent"

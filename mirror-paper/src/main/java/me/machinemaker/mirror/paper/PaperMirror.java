@@ -20,6 +20,7 @@
 package me.machinemaker.mirror.paper;
 
 import java.util.Arrays;
+import java.util.Optional;
 import me.machinemaker.mirror.Mirror;
 import org.bukkit.Bukkit;
 
@@ -28,7 +29,8 @@ import org.bukkit.Bukkit;
  */
 public final class PaperMirror {
 
-    public static final String OBC_PREFIX = Bukkit.getServer().getClass().getPackage().getName();
+    @SuppressWarnings("DataFlowIssue")
+    public static final String OBC_PREFIX = Optional.ofNullable(Bukkit.getServer()).map(s -> s.getClass().getPackage().getName()).orElse("org.bukkit.craftbukkit");
     public static final String NMS_PREFIX = "net.minecraft";
 
     public static final Class<?> CRAFT_SERVER_CLASS = Bukkit.getServer().getClass();
