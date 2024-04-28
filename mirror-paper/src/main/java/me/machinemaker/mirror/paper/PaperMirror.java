@@ -21,28 +21,89 @@ package me.machinemaker.mirror.paper;
 
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.function.Supplier;
 import me.machinemaker.mirror.Mirror;
+import me.machinemaker.mirror.util.CheckedSupplier;
 import org.bukkit.Bukkit;
+
+import static com.google.common.base.Suppliers.memoize;
+import static me.machinemaker.mirror.util.CheckedSupplier.checkedMemoize;
 
 /**
  * Paper specific utility class.
  */
 public final class PaperMirror {
 
-    @SuppressWarnings("DataFlowIssue")
+    @SuppressWarnings("OptionalOfNullableMisuse")
     public static final String OBC_PREFIX = Optional.ofNullable(Bukkit.getServer()).map(s -> s.getClass().getPackage().getName()).orElse("org.bukkit.craftbukkit");
     public static final String NMS_PREFIX = "net.minecraft";
 
-    public static final Class<?> CRAFT_SERVER_CLASS = Bukkit.getServer().getClass();
-    public static final Object CRAFT_SERVER = Bukkit.getServer();
+    private static final Supplier<Class<?>> CRAFT_SERVER_CLASS = memoize(() -> Bukkit.getServer().getClass());
+    private static final Supplier<Object> CRAFT_SERVER = memoize(Bukkit::getServer);
 
-    public static final Class<?> MINECRAFT_SERVER_CLASS = findMinecraftClass("server.MinecraftServer");
-    public static final Object MINECRAFT_SERVER = Mirror.fuzzyMethod(MINECRAFT_SERVER_CLASS, MINECRAFT_SERVER_CLASS).names("getServer").find().require(null);
+    private static final Supplier<Class<?>> MINECRAFT_SERVER_CLASS = memoize(() -> findMinecraftClass("server.MinecraftServer"));
+    private static final CheckedSupplier<Object, Throwable> MINECRAFT_SERVER = checkedMemoize(() -> Mirror.fuzzyMethod(minecraftServerClass(), minecraftServerClass()).names("getServer").find().invoke());
 
-    public static final Class<?> PLAYER_LIST_CLASS = findMinecraftClass("server.players.PlayerList");
-    public static final Object PLAYER_LIST = Mirror.fuzzyMethod(MINECRAFT_SERVER_CLASS, PLAYER_LIST_CLASS).find().require(MINECRAFT_SERVER);
+    private static final Supplier<Class<?>> PLAYER_LIST_CLASS = memoize(() -> findMinecraftClass("server.players.PlayerList"));
+    private static final CheckedSupplier<Object, Throwable> PLAYER_LIST = checkedMemoize(() -> Mirror.fuzzyMethod(minecraftServerClass(), playerListClass()).find().invoke(minecraftServer()));
 
     private PaperMirror() {
+    }
+
+    /**
+     * Retrieve the CraftServer class.
+     *
+     * @return the CraftServer class
+     */
+    public static Class<?> craftServerClass() {
+        return CRAFT_SERVER_CLASS.get();
+    }
+
+    /**
+     * Retrieve the CraftServer instance.
+     *
+     * @return the CraftServer instance
+     */
+    public static Object craftServer() {
+        return CRAFT_SERVER.get();
+    }
+
+    /**
+     * Retrieve the MinecraftServer class.
+     *
+     * @return the MinecraftServer class
+     */
+    public static Class<?> minecraftServerClass() {
+        return MINECRAFT_SERVER_CLASS.get();
+    }
+
+    /**
+     * Retrieve the MinecraftServer instance.
+     *
+     * @return the MinecraftServer instance
+     * @throws Throwable if the method invocation fails
+     */
+    public static Object minecraftServer() throws Throwable {
+        return MINECRAFT_SERVER.get();
+    }
+
+    /**
+     * Retrieve the PlayerList class.
+     *
+     * @return the PlayerList class
+     */
+    public static Class<?> playerListClass() {
+        return PLAYER_LIST_CLASS.get();
+    }
+
+    /**
+     * Retrieve the PlayerList instance.
+     *
+     * @return the PlayerList instance
+     * @throws Throwable if the method invocation fails
+     */
+    public static Object playerList() throws Throwable {
+        return PLAYER_LIST.get();
     }
 
     /**

@@ -19,13 +19,12 @@
  */
 package me.machinemaker.mirror;
 
-import io.leangen.geantyref.TypeToken;
-import java.lang.reflect.Type;
+import java.lang.invoke.MethodHandle;
 
 /**
  * A utility for finding fields based on limited information.
  */
-public interface FuzzyField {
+public interface FuzzyFieldFinder {
 
     /**
      * Get the owner of the field.
@@ -35,11 +34,11 @@ public interface FuzzyField {
     Class<?> owner();
 
     /**
-     * Get the generic type of the field.
+     * Get the type of the field.
      *
-     * @return the generic type
+     * @return the type
      */
-    Type type();
+    Class<?> fieldType();
 
     /**
      * Set the field names to check against.
@@ -47,33 +46,20 @@ public interface FuzzyField {
      * @param names possible field names
      * @return this
      */
-    FuzzyField names(String... names);
+    FuzzyFieldFinder names(String... names);
 
     /**
      * Attempt to find a matching field.
      *
+     * @param accessType the type of access you want to perform
      * @return the matched field
      */
-    FieldAccessor find();
+    MethodHandle find(Type accessType);
 
     /**
-     * A typed utility for finding fields based on limited information.
-     *
-     * @param <T> field type
+     * The type of access you want to perform.
      */
-    interface Typed<T> extends FuzzyField {
-
-        /**
-         * Get the type token for the field type.
-         *
-         * @return the type token
-         */
-        TypeToken<T> typeToken();
-
-        @Override
-        FieldAccessor.Typed<T> find();
-
-        @Override
-        FuzzyField.Typed<T> names(String... names);
+    enum Type {
+        GETTER, SETTER;
     }
 }

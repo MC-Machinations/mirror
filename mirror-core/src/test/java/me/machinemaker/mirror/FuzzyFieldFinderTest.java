@@ -20,34 +20,38 @@
 package me.machinemaker.mirror;
 
 import io.leangen.geantyref.TypeToken;
+import java.lang.invoke.MethodHandle;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class FuzzyFieldTest {
+class FuzzyFieldFinderTest {
 
     @Test
-    void testSimpleFuzzyField() {
+    void testSimpleFuzzyField() throws Throwable {
         final ExampleClass instance = new ExampleClass();
 
-        final FieldAccessor accessor = Mirror.fuzzyField(ExampleClass.class, String.class).find();
-        assertEquals("TEST", accessor.get(instance));
+        final FuzzyFieldFinder fuzzyFieldFinder = Mirror.fuzzyField(ExampleClass.class, String.class);
+        final MethodHandle getter = fuzzyFieldFinder.find(FuzzyFieldFinder.Type.GETTER);
+        final MethodHandle setter = fuzzyFieldFinder.find(FuzzyFieldFinder.Type.SETTER);
+        assertEquals("TEST", getter.invoke(instance));
 
-        accessor.set(instance, "OTHER_STRING");
+        setter.invokeExact(instance, "OTHER_STRING");
         assertEquals("OTHER_STRING", instance.field);
     }
 
 
     @Test
-    void testGenericFuzzyField() {
+    void testGenericFuzzyField() throws Throwable {
         final ExampleClass instance = new ExampleClass();
 
-        final FieldAccessor.Typed<List<Character>> accessor = Mirror.typedFuzzyField(ExampleClass.class, new TypeToken<List<Character>>() {})
-                .find();
-        assertEquals(List.of('a', 'b'), accessor.get(instance));
+        final FuzzyFieldFinder fuzzyFieldFinder = Mirror.fuzzyField(ExampleClass.class, new TypeToken<List<Character>>() {}.getType());
+        final MethodHandle getter = fuzzyFieldFinder.find(FuzzyFieldFinder.Type.GETTER);
+        final MethodHandle setter = fuzzyFieldFinder.find(FuzzyFieldFinder.Type.SETTER);
+        assertEquals(List.of('a', 'b'), getter.invoke(instance));
 
-        accessor.set(instance, List.of('c', 'd'));
+        setter.invokeExact(instance, List.of('c', 'd'));
         assertEquals(List.of('c', 'd'), instance.charList);
     }
 

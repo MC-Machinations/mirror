@@ -19,7 +19,9 @@
  */
 package me.machinemaker.mirror;
 
-import io.leangen.geantyref.TypeToken;
+import io.leangen.geantyref.GenericTypeReflector;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -28,37 +30,33 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-class FuzzyFieldImpl implements FuzzyField {
+record FuzzyFieldFinderImpl(List<String> names, Class<?> owner, Class<?> fieldType, java.lang.reflect.Type genericFieldType) implements FuzzyFieldFinder {
 
-    private final Class<?> owner;
-    private final Type type;
-    private final List<String> names = new ArrayList<>();
+    FuzzyFieldFinderImpl(final Class<?> owner, final Class<?> fieldType) {
+        this(new ArrayList<>(), owner, fieldType, fieldType);
+    }
 
-    FuzzyFieldImpl(final Class<?> owner, final Type type) {
-        this.owner = owner;
-        this.type = type;
+    FuzzyFieldFinderImpl(final Class<?> owner, final java.lang.reflect.Type fieldType) {
+        this(new ArrayList<>(), owner, GenericTypeReflector.erase(fieldType), fieldType);
+    }
+
+    FuzzyFieldFinderImpl {
+        names = new ArrayList<>(names);
     }
 
     @Override
-    public Class<?> owner() {
-        return this.owner;
-    }
-
-    @Override
-    public Type type() {
-        return this.type;
-    }
-
-    @Override
-    public FuzzyField names(final String... names) {
+    public FuzzyFieldFinder names(final String... names) {
         this.names.addAll(Arrays.asList(names));
         return this;
     }
 
     @Override
-    public FieldAccessor find() {
+    public MethodHandle find(final Type accessType) {
         try {
-            return FieldAccessor.from(this.find0());
+            return switch (accessType) {
+                case GETTER -> MethodHandles.privateLookupIn(this.owner, Mirror.LOOKUP).unreflectGetter(this.find0());
+                case SETTER -> MethodHandles.privateLookupIn(this.owner, Mirror.LOOKUP).unreflectSetter(this.find0());
+            };
         } catch (final IllegalAccessException ex) {
             throw new IllegalArgumentException("Could not access the found field", ex);
         }
@@ -72,7 +70,7 @@ class FuzzyFieldImpl implements FuzzyField {
 
         final Set<Field> match = new LinkedHashSet<>();
         for (final Field field : fields) {
-            if (this.type.equals(field.getGenericType())) {
+            if (this.fieldType.equals(field.getType())) {
                 match.add(field);
             }
         }
@@ -94,44 +92,5 @@ class FuzzyFieldImpl implements FuzzyField {
             }
         }
         throw new IllegalStateException("Found multiple fields that match, but none match any names provided. " + this + ": " + match);
-    }
-
-    @Override
-    public String toString() {
-        return "FuzzyFieldImpl{" +
-                "owner=" + this.owner +
-                ", type=" + this.type +
-                ", names=" + this.names +
-                '}';
-    }
-
-    static class TypedImpl<T> extends FuzzyFieldImpl implements FuzzyField.Typed<T> {
-
-        private final TypeToken<T> type;
-
-        TypedImpl(final Class<?> owner, final TypeToken<T> type) {
-            super(owner, type.getType());
-            this.type = type;
-        }
-
-        @Override
-        public TypeToken<T> typeToken() {
-            return this.type;
-        }
-
-        @Override
-        public FieldAccessor.Typed<T> find() {
-            try {
-                return FieldAccessor.typed(this.find0(), this.type);
-            } catch (final IllegalAccessException ex) {
-                throw new IllegalArgumentException("Could not access the found field", ex);
-            }
-        }
-
-        @Override
-        public FuzzyField.Typed<T> names(final String... names) {
-            super.names(names);
-            return this;
-        }
     }
 }

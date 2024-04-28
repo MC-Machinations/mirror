@@ -19,12 +19,12 @@
  */
 package me.machinemaker.mirror;
 
-import io.leangen.geantyref.TypeToken;
+import java.lang.invoke.MethodHandle;
 
 /**
  * A utility for finding methods based on limited information.
  */
-public interface FuzzyMethod {
+public sealed interface FuzzyMethodFinder permits FuzzyMethodFinderImpl {
 
     /**
      * Get the owner of the method.
@@ -46,7 +46,7 @@ public interface FuzzyMethod {
      * @param params the method parameter types
      * @return this
      */
-    FuzzyMethod params(Class<?>... params);
+    FuzzyMethodFinder params(Class<?>... params);
 
     /**
      * Set the method names to check against.
@@ -54,36 +54,12 @@ public interface FuzzyMethod {
      * @param names possible method names
      * @return this
      */
-    FuzzyMethod names(String... names);
+    FuzzyMethodFinder names(String... names);
 
     /**
      * Attempt to find a matching method.
      *
      * @return the matched method
      */
-    MethodInvoker find();
-
-    /**
-     * A typed utility for finding methods based on limited information.
-     *
-     * @param <T> return type
-     */
-    interface Typed<T> extends FuzzyMethod {
-
-        /**
-         * Get the return type token for the method.
-         *
-         * @return the return type token
-         */
-        TypeToken<T> returnTypeToken();
-
-        @Override
-        MethodInvoker.Typed<T> find();
-
-        @Override
-        FuzzyMethod.Typed<T> params(Class<?>... params);
-
-        @Override
-        FuzzyMethod.Typed<T> names(String... names);
-    }
+    MethodHandle find();
 }

@@ -19,15 +19,16 @@
  */
 package me.machinemaker.mirror;
 
+import java.lang.invoke.MethodHandle;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class FuzzyMethodTest {
+class FuzzyMethodFinderTest {
 
     @Test
     void testSimpleFuzzyMethod() {
-        MethodInvoker invoker = Mirror.fuzzyMethod(ExampleClass.class, Void.TYPE)
+        MethodHandle invoker = Mirror.fuzzyMethod(ExampleClass.class, Void.TYPE)
                 .find();
 
         invoker = Mirror.fuzzyMethod(ExampleClass.class, Void.TYPE)

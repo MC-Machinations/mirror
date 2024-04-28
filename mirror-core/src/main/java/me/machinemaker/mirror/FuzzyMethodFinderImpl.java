@@ -19,8 +19,8 @@
  */
 package me.machinemaker.mirror;
 
-import io.leangen.geantyref.GenericTypeReflector;
-import io.leangen.geantyref.TypeToken;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,16 +28,15 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-class FuzzyMethodImpl implements FuzzyMethod {
+record FuzzyMethodFinderImpl(List<Class<?>> params, List<String> names, Class<?> owner, Class<?> returnType) implements FuzzyMethodFinder {
 
-    final List<Class<?>> params = new ArrayList<>();
-    final List<String> names = new ArrayList<>();
-    private final Class<?> owner;
-    private final Class<?> returnType;
+    FuzzyMethodFinderImpl(final Class<?> owner, final Class<?> returnType) {
+        this(new ArrayList<>(), new ArrayList<>(), owner, returnType);
+    }
 
-    FuzzyMethodImpl(final Class<?> owner, final Class<?> returnType) {
-        this.owner = owner;
-        this.returnType = returnType;
+    FuzzyMethodFinderImpl { // make sure they are mutable
+        params = new ArrayList<>(params);
+        names = new ArrayList<>(names);
     }
 
     static boolean parametersMatch(final Class<?>[] methodParameters, final List<Class<?>> fuzzyParameters) {
@@ -53,17 +52,7 @@ class FuzzyMethodImpl implements FuzzyMethod {
     }
 
     @Override
-    public Class<?> owner() {
-        return this.owner;
-    }
-
-    @Override
-    public Class<?> returnType() {
-        return this.returnType;
-    }
-
-    @Override
-    public FuzzyMethod params(final Class<?>... params) {
+    public FuzzyMethodFinder params(final Class<?>... params) {
         if (!this.params.isEmpty()) {
             throw new IllegalStateException("You already set the params on this fuzzy method");
         }
@@ -72,15 +61,15 @@ class FuzzyMethodImpl implements FuzzyMethod {
     }
 
     @Override
-    public FuzzyMethod names(final String... names) {
+    public FuzzyMethodFinder names(final String... names) {
         this.names.addAll(Arrays.asList(names));
         return this;
     }
 
     @Override
-    public MethodInvoker find() {
+    public MethodHandle find() {
         try {
-            return MethodInvoker.from(this.find0());
+            return MethodHandles.privateLookupIn(this.owner, Mirror.LOOKUP).unreflect(this.find0());
         } catch (final IllegalAccessException ex) {
             throw new IllegalArgumentException("Could not access the found method", ex);
         }
@@ -125,61 +114,5 @@ class FuzzyMethodImpl implements FuzzyMethod {
             }
         }
         throw new IllegalStateException("Found multiple methods that match, but none match any names provided. " + this + ": " + nameCheck);
-    }
-
-    @Override
-    public String toString() {
-        return "FuzzyMethodImpl{" +
-                "owner=" + this.owner +
-                ", returnType=" + this.returnType +
-                (this.params.isEmpty() ? "" : ", params=" + this.params) +
-                (this.names.isEmpty() ? "" : ", names=" + this.names) +
-                '}';
-    }
-
-    static class TypedImpl<T> extends FuzzyMethodImpl implements Typed<T> {
-
-        private final TypeToken<T> returnType;
-
-        TypedImpl(final Class<?> owner, final TypeToken<T> returnType) {
-            super(owner, GenericTypeReflector.erase(returnType.getType()));
-            this.returnType = returnType;
-        }
-
-        @Override
-        public TypeToken<T> returnTypeToken() {
-            return this.returnType;
-        }
-
-        @Override
-        public MethodInvoker.Typed<T> find() {
-            try {
-                return MethodInvoker.typed(this.find0(), this.returnType);
-            } catch (final IllegalAccessException ex) {
-                throw new IllegalArgumentException("Could not access the found method", ex);
-            }
-        }
-
-        @Override
-        public FuzzyMethod.Typed<T> params(final Class<?>... params) {
-            super.params(params);
-            return this;
-        }
-
-        @Override
-        public FuzzyMethod.Typed<T> names(final String... names) {
-            super.names(names);
-            return this;
-        }
-
-        @Override
-        public String toString() {
-            return "FuzzyMethodImpl$TypedImpl{" +
-                    "returnType=" + this.returnTypeToken().getType() +
-                    ", owner=" + this.owner() +
-                    (this.params.isEmpty() ? "" : ", params=" + this.params) +
-                    (this.names.isEmpty() ? "" : ", names=" + this.names) +
-                    '}';
-        }
     }
 }
