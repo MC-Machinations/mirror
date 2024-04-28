@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "me.machinemaker.mirror"
-version = "0.2.0"
+version = "0.2.1-SNAPSHOT"
 
 subprojects {
     apply(plugin="java-library")
